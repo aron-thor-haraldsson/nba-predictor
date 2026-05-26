@@ -10,3 +10,7 @@ dist/
 build/
 .vscode/
 .idea/
+user_main.py
+data/**/*.pkl
+logs/*.log
+logs/*.log.*
