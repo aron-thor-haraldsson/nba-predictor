@@ -6,6 +6,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 RAW_DATA_DIR = os.path.join(DATA_DIR, "raw")
 GAMES_DIR = os.path.join(RAW_DATA_DIR, "games")
 SEASONS_DIR = os.path.join(RAW_DATA_DIR, "seasons")
+JSON_CACHE_DIR = os.path.join(RAW_DATA_DIR, "json")
 PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 

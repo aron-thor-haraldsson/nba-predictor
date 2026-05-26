@@ -23,8 +23,8 @@ pytest tests/test_models/test_game.py::test_game_defaults  # run one test
 
 ```
 src/
-  constants.py        — BASE_DIR, DATA_DIR, GAMES_DIR, LOG_DIR, BASE_TEAM, BASE_PLAYER,
-                        BASE_SEASON, BASE_GAME_ID, NBA_CDN_BASE, NBA_REQUEST_HEADERS
+  constants.py        — BASE_DIR, DATA_DIR, GAMES_DIR, JSON_CACHE_DIR, LOG_DIR, BASE_TEAM,
+                        BASE_PLAYER, BASE_SEASON, BASE_GAME_ID, NBA_CDN_BASE, NBA_REQUEST_HEADERS
   logging_config.py   — setup_logging(); call once from the entry point
   models/
     game.py           — PlayByPlayEvent, Game (dataclasses)
@@ -44,6 +44,7 @@ src/
 
 data/
   raw/games/     — one .pkl per game (gitignored)
+  raw/json/      — cached CDN JSON responses ({game_id}_gamedetail.json, {game_id}_{period}_pbp.json)
   raw/seasons/   — season-level index files
   processed/     — scored player/team data
 

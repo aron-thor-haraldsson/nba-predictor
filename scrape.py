@@ -5,8 +5,8 @@ from src.scraper.storage import game_exists, load_game, save_game
 
 setup_logging()
 
-SEASON_YEAR = 2020
-NUM_GAMES = 250 # Use 'None' for all
+SEASON_YEAR = 2025
+NUM_GAMES = 200 # Use 'None' for all
 
 # --- Step 1: fetch and cache the schedule ---
 print(f"Loading {SEASON_YEAR} season schedule...")
