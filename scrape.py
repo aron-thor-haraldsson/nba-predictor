@@ -1,5 +1,5 @@
 from src.logging_config import setup_logging
-from src.scraper.game_scraper import scrape_game
+from src.scraper.game_scraper import GameNotPlayedError, scrape_game
 from src.scraper.season_scraper import _completed_game_ids, _load_schedule
 from src.scraper.storage import game_exists, load_game, save_game
 
@@ -21,7 +21,11 @@ for game_id in all_ids[:NUM_GAMES]:
         game = load_game(game_id)
         status = "cached"
     else:
-        game = scrape_game(game_id)
+        try:
+            game = scrape_game(game_id)
+        except GameNotPlayedError as e:
+            print(f"  [skipped] {game_id}: {e}")
+            continue
         save_game(game)
         status = "scraped"
     print(f"  [{status}] {game}")
