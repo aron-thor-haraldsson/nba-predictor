@@ -40,7 +40,7 @@ def fetch_pbp(game_id: str, period: int) -> dict:
     data = resp.json()
     os.makedirs(JSON_CACHE_DIR, exist_ok=True)
     with open(cache_path, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=2)
     return data["g"]
 
 
@@ -61,5 +61,5 @@ def fetch_gamedetail(game_id: str) -> dict:
     data = resp.json()
     os.makedirs(JSON_CACHE_DIR, exist_ok=True)
     with open(cache_path, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent = 2)
     return data["g"]
