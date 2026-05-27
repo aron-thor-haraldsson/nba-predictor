@@ -10,7 +10,7 @@ dist/
 build/
 .vscode/
 .idea/
-user_main.py
+scrape.py
 data/raw/**
 logs/*.log
 logs/*.log.*
