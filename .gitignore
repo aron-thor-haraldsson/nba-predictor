@@ -11,6 +11,6 @@ build/
 .vscode/
 .idea/
 user_main.py
-data/raw
+data/raw/**
 logs/*.log
 logs/*.log.*
