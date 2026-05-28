@@ -81,22 +81,13 @@ data/
 tests/           — mirrors src/ layout; test_scraper/, test_models/, test_scoring/
 ```
 
-## Development phases
-
-1. **Scraping & storage** ✓ *complete*: `scrape_game()`, `scrape_season()`, `scrape_all_seasons()` implemented via `stats.nba.com` (playbyplayv3 + boxscoresummaryv2), covering 1996-97 onward.
-2. **Base player scoring** ← *current focus*: on/off court per-minute rates for James Johnson (Indiana Pacers) define the 1.0 attack/defence baseline. Score all Pacers players relative to him, across one game → full season → all history.
-3. **Expand to all teams**: repeat scoring for every team; use weighted averaging for cross-team ratios to limit error compounding.
-4. **Global relative scores**: unify all player scores across teams relative to the 1.0 baseline. Consider tracking score drift over time.
-5. **Prediction (known lineups)**: given players + expected court time → win probability and score margin.
-6. **Prediction (teams only)**: estimate court times from historical averages when only starting lineups are known.
-
 ## Key design decisions
 
 **Scoring model**: each player has `attack` and `defence` floats relative to the base player (James Johnson, Indiana Pacers = 1.0 / 1.0). Scores are derived from on-court vs off-court per-minute scoring rates across play-by-play data. `defence` is inverted: 0.5 means the opponent scores at half the rate, which is *better*.
 
-**Cross-team comparison**: players who never share court time are linked via weighted averages of ratio chains to reduce compounding error (see `ChatGPT_chats/robust_productivity_ratio_estimation.txt`).
+**Cross-team comparison**: players who never share court time are linked via weighted averages of ratio chains to reduce compounding error.
 
-**Player and team IDs**: `Game` stores `home_team_id`/`away_team_id` (int); `PlayByPlayEvent` stores `home_player_ids`/`away_player_ids` as `tuple[int, ...]`, parallel to the name tuples. Use `players.csv` / `teams.csv` to resolve IDs to display names. Existing pickles without IDs will have `0` / empty tuples for these fields and should be re-scraped from the JSON cache.
+**Player and team IDs**: `Game` stores `home_team_id`/`away_team_id` (int); `PlayByPlayEvent` stores `home_player_ids`/`away_player_ids` as `tuple[int, ...]`, parallel to the name tuples. Use `players.csv` / `teams.csv` to resolve IDs to display names.
 
 **Player pairs**: represented as plain `tuple[str, str]`, not a custom class.
 
