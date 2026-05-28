@@ -58,20 +58,21 @@ def _parse_sub_description(
     team: str,
     pid_to_name: dict[int, str],
     pid_to_team: dict[int, str],
-) -> str | None:
-    """Extract the incoming player's full name from a 'SUB: X FOR Y' description.
+) -> tuple[str, int] | None:
+    """Extract the incoming player's name and personId from a 'SUB: X FOR Y' description.
 
     Matches the name fragment against pid_to_name (built from all game actions, so
     bench players who appear later are already registered). Ambiguous fragments will
     match the first player found on the team; this is reliable in practice because
     the NBA does not roster two players with the same last name on the same team.
+    Returns (player_name, person_id) or None if no match.
     """
     if "SUB:" not in desc or " FOR " not in desc:
         return None
     fragment = desc.split("SUB:")[1].split(" FOR ")[0].strip()
     for pid, name in pid_to_name.items():
         if pid_to_team.get(pid) == team and fragment in name:
-            return name
+            return name, pid
     return None
 
 
@@ -81,8 +82,8 @@ def _infer_starters_stats(
     pid_to_name: dict[int, str],
     home_abbr: str,
     away_abbr: str,
-) -> tuple[list[str], list[str]]:
-    """Return [home_starters], [away_starters] inferred from period-1 playbyplayv3 actions."""
+) -> tuple[list[str], list[int], list[str], list[int]]:
+    """Return (home_names, home_ids, away_names, away_ids) inferred from period-1 actions."""
     sentinel = len(period1_actions)
     first_sub: dict[str, int] = {home_abbr: sentinel, away_abbr: sentinel}
     for i, action in enumerate(period1_actions):
@@ -91,10 +92,12 @@ def _infer_starters_stats(
             if team in first_sub and first_sub[team] == sentinel:
                 first_sub[team] = i
 
-    home: list[str] = []
-    away: list[str] = []
+    home_names: list[str] = []
+    home_ids: list[int] = []
+    away_names: list[str] = []
+    away_ids: list[int] = []
     for i, action in enumerate(period1_actions):
-        if len(home) >= 5 and len(away) >= 5:
+        if len(home_names) >= 5 and len(away_names) >= 5:
             break
         pid = int(action.get("personId") or 0)
         if pid <= 0:
@@ -103,12 +106,14 @@ def _infer_starters_stats(
         name = pid_to_name.get(pid)
         if not name:
             continue
-        if team == home_abbr and i < first_sub[home_abbr] and name not in home and len(home) < 5:
-            home.append(name)
-        elif team == away_abbr and i < first_sub[away_abbr] and name not in away and len(away) < 5:
-            away.append(name)
+        if team == home_abbr and i < first_sub[home_abbr] and name not in home_names and len(home_names) < 5:
+            home_names.append(name)
+            home_ids.append(pid)
+        elif team == away_abbr and i < first_sub[away_abbr] and name not in away_names and len(away_names) < 5:
+            away_names.append(name)
+            away_ids.append(pid)
 
-    return home, away
+    return home_names, home_ids, away_names, away_ids
 
 
 def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
@@ -130,7 +135,7 @@ def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
             pid_to_team[pid] = team
 
     period1_actions = [a for a in actions if int(a.get("period") or 0) == 1]
-    home_lineup, away_lineup = _infer_starters_stats(
+    home_lineup, home_lineup_ids, away_lineup, away_lineup_ids = _infer_starters_stats(
         period1_actions, pid_to_team, pid_to_name, home_abbr, away_abbr
     )
 
@@ -147,11 +152,16 @@ def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
 
         if action_type == "Substitution":
             name_out = pid_to_name.get(pid)
-            name_in = _parse_sub_description(desc, team, pid_to_name, pid_to_team)
-            if name_out and name_in:
+            sub_result = _parse_sub_description(desc, team, pid_to_name, pid_to_team)
+            if name_out and sub_result:
+                name_in, pid_in = sub_result
                 if team == home_abbr:
+                    home_lineup_ids = [pid_in if home_lineup[i] == name_out else home_lineup_ids[i]
+                                       for i in range(len(home_lineup))]
                     home_lineup = [name_in if n == name_out else n for n in home_lineup]
                 elif team == away_abbr:
+                    away_lineup_ids = [pid_in if away_lineup[i] == name_out else away_lineup_ids[i]
+                                       for i in range(len(away_lineup))]
                     away_lineup = [name_in if n == name_out else n for n in away_lineup]
 
         # scoreHome/scoreAway are "" on non-scoring events; carry forward when absent
@@ -174,6 +184,8 @@ def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
             away_score=away_score_running,
             home_players=tuple(home_lineup),
             away_players=tuple(away_lineup),
+            home_player_ids=tuple(home_lineup_ids),
+            away_player_ids=tuple(away_lineup_ids),
         ))
 
     final = events[-1] if events else None
@@ -188,6 +200,8 @@ def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
         date=game_date,
         home_team_abbr=home_abbr,
         away_team_abbr=away_abbr,
+        home_team_id=summary["home_team_id"],
+        away_team_id=summary["visitor_team_id"],
         events=events,
     )
 

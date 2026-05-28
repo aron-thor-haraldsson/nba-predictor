@@ -6,13 +6,15 @@ from dataclasses import dataclass, field
 class PlayByPlayEvent:
     """A single event from an NBA play-by-play record."""
     period: int
-    clock: str                       # Time remaining in period, e.g. "10:30"
-    event_type: str                  # e.g. "field_goal", "substitution", "foul"
+    clock: str                          # Time remaining in period, e.g. "10:30"
+    event_type: str                     # e.g. "field_goal", "substitution", "foul"
     description: str
     home_score: int
     away_score: int
-    home_players: tuple[str, ...]    # Names of home players on court at this moment
-    away_players: tuple[str, ...]    # Names of away players on court at this moment
+    home_players: tuple[str, ...]       # Names of home players on court at this moment
+    away_players: tuple[str, ...]       # Names of away players on court at this moment
+    home_player_ids: tuple[int, ...] = field(default_factory=tuple)  # personIds, parallel to home_players
+    away_player_ids: tuple[int, ...] = field(default_factory=tuple)  # personIds, parallel to away_players
 
     def __str__(self) -> str:
         desc = self.description if len(self.description) <= 60 else self.description[:59] + "…"
@@ -29,6 +31,8 @@ class Game:
     date: datetime.date
     home_team_abbr: str
     away_team_abbr: str
+    home_team_id: int = 0
+    away_team_id: int = 0
     events: list[PlayByPlayEvent] = field(default_factory=list)
 
     def __str__(self) -> str:

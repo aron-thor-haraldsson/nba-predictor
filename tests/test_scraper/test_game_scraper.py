@@ -60,7 +60,7 @@ def test_parse_sub_description_finds_incoming_player():
     pid_to_name = {1: "Alice A", 6: "Frank F"}
     pid_to_team = {1: "HOM", 6: "HOM"}
     result = _parse_sub_description("SUB: Frank FOR Alice", "HOM", pid_to_name, pid_to_team)
-    assert result == "Frank F"
+    assert result == ("Frank F", 6)
 
 def test_parse_sub_description_returns_none_when_no_match():
     pid_to_name = {1: "Alice A"}
@@ -192,6 +192,8 @@ def test_build_game_from_stats_teams(stats_summary, stats_actions_with_full_line
     game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
     assert game.home_team_abbr == "HOM"
     assert game.away_team_abbr == "VIS"
+    assert game.home_team_id == 1111
+    assert game.away_team_id == 2222
 
 
 # --- _build_game_from_stats: scoring ---
@@ -244,6 +246,23 @@ def test_build_game_from_stats_sub_does_not_change_away_lineup(stats_summary, st
     before = game.events[sub_idx - 1]
     after = game.events[sub_idx]
     assert before.away_players == after.away_players
+
+
+def test_build_game_from_stats_sub_updates_lineup_ids(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+    sub_idx = next(i for i, e in enumerate(game.events) if e.event_type == "substitution")
+    before = game.events[sub_idx - 1]
+    after = game.events[sub_idx]
+    assert 5 in before.home_player_ids   # Eve E (pid 5) on court before sub
+    assert 5 not in after.home_player_ids
+    assert 6 in after.home_player_ids    # Frank F (pid 6) on court after sub
+
+
+def test_build_game_from_stats_player_ids_parallel_to_names(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+    for event in game.events:
+        assert len(event.home_player_ids) == len(event.home_players)
+        assert len(event.away_player_ids) == len(event.away_players)
 
 
 # --- scrape_game ---
