@@ -19,7 +19,7 @@ from collections import defaultdict
 import requests
 
 from src.constants import PLAYERS_CSV, TEAMS_HISTORY_CSV, TEAMS_CSV
-from src.scraper.api_client import NBA_STATS_BASE, STATS_HEADERS
+from src.scraper.api_client import NBA_STATS_BASE, STATS_HEADERS, rowset_to_dicts
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +27,6 @@ _PLAYER_FIELDS = ["person_id", "player_name", "player_name_i", "full_name"]
 _TEAM_FIELDS = ["team_id", "team_tricode", "team_full_name"]
 _TEAMS_HISTORY_FIELDS = ["team_id", "team_city", "team_name", "start_year", "end_year"]
 
-
-def _rows_to_dicts(result_set: dict) -> list[dict]:
-    headers = result_set["headers"]
-    return [dict(zip(headers, row)) for row in result_set["rowSet"]]
 
 
 def fetch_players(force_refresh: bool = False) -> list[dict]:
@@ -51,7 +47,7 @@ def fetch_players(force_refresh: bool = False) -> list[dict]:
         timeout=60,
     )
     resp.raise_for_status()
-    rows = _rows_to_dicts(resp.json()["resultSets"][0])
+    rows = rowset_to_dicts(resp.json()["resultSets"][0])
 
     players = []
     for r in rows:
@@ -89,7 +85,7 @@ def fetch_teams(force_refresh: bool = False) -> list[dict]:
         timeout=60,
     )
     resp.raise_for_status()
-    active_rows = _rows_to_dicts(resp.json()["resultSets"][0])  # FranchiseHistory
+    active_rows = rowset_to_dicts(resp.json()["resultSets"][0])  # FranchiseHistory
 
     by_id: dict[int, list[dict]] = defaultdict(list)
     for r in active_rows:
@@ -110,7 +106,7 @@ def fetch_teams(force_refresh: bool = False) -> list[dict]:
     resp2.raise_for_status()
     tricode_by_id = {
         r["TEAM_ID"]: r["ABBREVIATION"]
-        for r in _rows_to_dicts(resp2.json()["resultSets"][0])
+        for r in rowset_to_dicts(resp2.json()["resultSets"][0])
         if r["ABBREVIATION"]
     }
 
@@ -175,7 +171,7 @@ def fetch_teams_history(force_refresh: bool = False) -> list[dict]:
         timeout=60,
     )
     resp.raise_for_status()
-    raw_rows = _rows_to_dicts(resp.json()["resultSets"][0])  # active franchises only
+    raw_rows = rowset_to_dicts(resp.json()["resultSets"][0])  # active franchises only
 
     history = [
         {

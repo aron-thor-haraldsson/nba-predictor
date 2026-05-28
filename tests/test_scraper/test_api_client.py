@@ -6,7 +6,7 @@ import pytest
 from src.scraper.api_client import (
     NBA_STATS_BASE,
     _find_result_set,
-    _rowset_to_dicts,
+    rowset_to_dicts,
     fetch_stats_pbp,
     fetch_stats_summary,
 )
@@ -72,17 +72,17 @@ def _pbp_payload(game_id="0022500001"):
     }
 
 
-# --- _rowset_to_dicts ---
+# --- rowset_to_dicts ---
 
-def test_rowset_to_dicts_basic():
+def testrowset_to_dicts_basic():
     rs = {"headers": ["A", "B"], "rowSet": [[1, 2], [3, 4]]}
-    result = _rowset_to_dicts(rs)
+    result = rowset_to_dicts(rs)
     assert result == [{"A": 1, "B": 2}, {"A": 3, "B": 4}]
 
 
-def test_rowset_to_dicts_empty():
+def testrowset_to_dicts_empty():
     rs = {"headers": ["A", "B"], "rowSet": []}
-    assert _rowset_to_dicts(rs) == []
+    assert rowset_to_dicts(rs) == []
 
 
 # --- _find_result_set ---

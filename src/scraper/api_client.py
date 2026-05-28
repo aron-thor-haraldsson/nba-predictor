@@ -46,7 +46,7 @@ STATS_HEADERS = {
 }
 
 
-def _rowset_to_dicts(result_set: dict) -> list[dict]:
+def rowset_to_dicts(result_set: dict) -> list[dict]:
     headers = result_set["headers"]
     return [dict(zip(headers, row)) for row in result_set["rowSet"]]
 
@@ -77,8 +77,8 @@ def fetch_stats_summary(game_id: str) -> dict:
     resp.raise_for_status()
     result_sets = resp.json()["resultSets"]
 
-    game_summary = _rowset_to_dicts(_find_result_set(result_sets, "GameSummary"))[0]
-    linescore_rows = _rowset_to_dicts(_find_result_set(result_sets, "LineScore"))
+    game_summary = rowset_to_dicts(_find_result_set(result_sets, "GameSummary"))[0]
+    linescore_rows = rowset_to_dicts(_find_result_set(result_sets, "LineScore"))
 
     home_team_id = int(game_summary["HOME_TEAM_ID"])
     visitor_team_id = int(game_summary["VISITOR_TEAM_ID"])
