@@ -19,6 +19,32 @@ pytest tests/test_models/test_game.py           # run a single file
 pytest tests/test_models/test_game.py::test_game_defaults  # run one test
 ```
 
+## CLI tools
+
+```bash
+# Scraping
+python -m src.scraper.game_scraper <game_id>              # scrape a single game
+python -m src.scraper.game_scraper <game_id> --force      # re-scrape even if cached
+python -m src.scraper.season_scraper --season 2025        # scrape one season (end year)
+python -m src.scraper.season_scraper --season 2025 --force  # re-fetch game ID list too
+python -m src.scraper.season_scraper --all                # scrape all seasons from 1996-97
+
+# Lookup tables (always force-refreshes from the API)
+python -m src.scraper.lookup_scraper --fetch-players
+python -m src.scraper.lookup_scraper --fetch-teams
+python -m src.scraper.lookup_scraper --fetch-teams-history
+python -m src.scraper.lookup_scraper --fetch-all-lookup
+
+# Inspection
+python -m src.inspect_cache                               # summary of cached games by season
+python -m src.inspect_cache --season 2025                 # count for one season
+python -m src.inspect_cache --season 2025 --list          # print individual game IDs
+python -m src.inspect_game <game_id>                      # print all events for a game
+python -m src.inspect_game <game_id> --period 2           # filter by period
+python -m src.inspect_game <game_id> --type substitution  # filter by event type
+python -m src.inspect_game <game_id> --lineups            # show lineup at each change
+```
+
 ## Architecture
 
 ```
