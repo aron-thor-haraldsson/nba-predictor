@@ -2,6 +2,10 @@
 Fetches play-by-play data and converts it into the project's Game datatype.
 
 Source: stats.nba.com playbyplayv3 + boxscoresummaryv2, covering the 1996-97 season onward.
+
+Usage:
+    python -m src.scraper.game_scraper <game_id>
+    python -m src.scraper.game_scraper <game_id> --force
 """
 import argparse
 import datetime
