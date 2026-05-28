@@ -1,0 +1,20 @@
+[project]
+name = "nba-predictor"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.34",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+markers = [
+    "network: hits stats.nba.com (deselect with -m 'not network')",
+    "slow: takes more than a few seconds to run",
+]

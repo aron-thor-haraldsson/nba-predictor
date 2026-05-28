@@ -4,7 +4,7 @@
 
 NBA game outcome predictor. Scrapes play-by-play data, derives per-player productivity scores relative to a baseline player, and predicts game outcomes.
 
-Python 3.10, virtualenv at `.venv/`.
+Python 3.10, virtualenv at `.venv/`. Install: `pip install -e ".[dev]"`.
 
 ## Commands
 
