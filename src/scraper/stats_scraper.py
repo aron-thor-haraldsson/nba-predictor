@@ -67,7 +67,7 @@ def fetch_stats_summary(game_id: str) -> dict:
     filename = f"{game_id}_stats_summary.json"
     cache_path = os.path.join(JSON_CACHE_DIR, filename)
     if os.path.isfile(cache_path):
-        logger.debug("Cache hit %s", cache_path)
+        logger.debug("Cache hit %s", filename)
         with open(cache_path) as f:
             return json.load(f)
 
@@ -112,7 +112,7 @@ def fetch_stats_pbp(game_id: str) -> list[dict]:
     filename = f"{game_id}_stats_pbp.json"
     cache_path = os.path.join(JSON_CACHE_DIR, filename)
     if os.path.isfile(cache_path):
-        logger.debug("Cache hit %s", cache_path)
+        logger.debug("Cache hit %s", filename)
         with open(cache_path) as f:
             return json.load(f)
 

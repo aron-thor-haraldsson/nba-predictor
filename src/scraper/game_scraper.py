@@ -189,7 +189,7 @@ def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
         ))
 
     final = events[-1] if events else None
-    logger.info(
+    logger.debug(
         "Built game %s: %d events, %s %d – %d %s",
         game_id, len(events),
         home_abbr, final.home_score if final else 0,
@@ -217,7 +217,7 @@ def scrape_game(game_id: str) -> Game:
     Raises GameNotPlayedError if the game has no play-by-play data (postponed,
     cancelled, or pre-1996-97).
     """
-    logger.info("Scraping game %s", game_id)
+    logger.debug("Scraping game %s", game_id)
     try:
         summary = fetch_stats_summary(game_id)
         actions = fetch_stats_pbp(game_id)

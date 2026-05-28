@@ -15,7 +15,7 @@ import os
 
 import requests
 
-from src.constants import SEASONS_DIR
+from src.constants import JSON_CACHE_DIR, SEASONS_DIR
 from src.models.game import Game
 from src.scraper.game_scraper import GameNotPlayedError, scrape_game
 from src.scraper.stats_scraper import NBA_STATS_BASE, STATS_HEADERS
@@ -24,6 +24,23 @@ from src.scraper.storage import game_exists, load_game, save_game
 logger = logging.getLogger(__name__)
 
 _SCRAPEABLE_GAME_TYPES = frozenset("2456")  # regular, playoff, play-in, in-season tournament
+
+
+def _json_cached(game_id: str) -> bool:
+    summary = os.path.join(JSON_CACHE_DIR, f"{game_id}_stats_summary.json")
+    pbp = os.path.join(JSON_CACHE_DIR, f"{game_id}_stats_pbp.json")
+    return os.path.isfile(summary) and os.path.isfile(pbp)
+
+
+def _print_game_line(prefix: str, game: Game) -> None:
+    final = game.events[-1] if game.events else None
+    home_score = final.home_score if final else 0
+    away_score = final.away_score if final else 0
+    print(
+        f"{prefix:<13} [{game.game_id}] {game.date} | "
+        f"{game.home_team_abbr} vs {game.away_team_abbr} | "
+        f"{home_score}-{away_score} | {len(game.events)} events"
+    )
 
 
 def _game_ids_path(year: int) -> str:
@@ -93,13 +110,16 @@ def scrape_season(year: int, force_refresh: bool = False) -> list[Game]:
         if game_exists(game_id):
             game = load_game(game_id)
             logger.debug("Loaded cached game %s", game_id)
+            _print_game_line("[pkl cached]", game)
         else:
+            prefix = "[half-scrape]" if _json_cached(game_id) else "[scraped]"
             try:
                 game = scrape_game(game_id)
             except GameNotPlayedError as e:
                 logger.warning("Skipping %s: %s", game_id, e)
                 continue
             save_game(game)
+            _print_game_line(prefix, game)
         games.append(game)
     return games
 

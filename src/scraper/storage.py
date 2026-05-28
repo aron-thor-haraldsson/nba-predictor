@@ -27,7 +27,7 @@ def save_game(game: Game, games_dir: str = GAMES_DIR) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as f:
         pickle.dump(game, f)
-    logger.info("Saved game %s to %s", game.game_id, path)
+    logger.debug("Saved game %s to %s", game.game_id, path)
 
 
 def load_game(game_id: str, games_dir: str = GAMES_DIR) -> Game:
