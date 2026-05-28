@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project
 
 NBA game outcome predictor. Scrapes play-by-play data, derives per-player productivity scores relative to a baseline player, and predicts game outcomes.
@@ -12,7 +10,6 @@ Python 3.10, virtualenv at `.venv/`.
 
 ```bash
 source .venv/bin/activate
-pip install -r requirements.txt
 
 pytest                                          # run all tests
 pytest tests/test_models/test_game.py           # run a single file
