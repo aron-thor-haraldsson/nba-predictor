@@ -3,6 +3,7 @@ Fetches play-by-play data and converts it into the project's Game datatype.
 
 Source: stats.nba.com playbyplayv3 + boxscoresummaryv2, covering the 1996-97 season onward.
 """
+import argparse
 import datetime
 import logging
 
@@ -226,3 +227,26 @@ def scrape_game(game_id: str) -> Game:
     if not actions:
         raise GameNotPlayedError(f"Game {game_id} has no play-by-play data")
     return _build_game(summary, actions)
+
+
+if __name__ == "__main__":
+    from src.logging_config import setup_logging
+    from src.storage import game_exists, save_game
+
+    setup_logging()
+
+    parser = argparse.ArgumentParser(description="Scrape a single NBA game from stats.nba.com")
+    parser.add_argument("game_id", help="NBA game ID, e.g. 0022400463")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-scrape even if the game is already cached")
+    args = parser.parse_args()
+
+    if not args.force and game_exists(args.game_id):
+        print(f"Game {args.game_id} already cached. Use --force to re-scrape.")
+    else:
+        try:
+            game = scrape_game(args.game_id)
+            save_game(game)
+            print(f"Saved game {args.game_id}: {game.away_team_abbr} @ {game.home_team_abbr} ({game.date})")
+        except GameNotPlayedError as e:
+            print(f"Error: {e}")
