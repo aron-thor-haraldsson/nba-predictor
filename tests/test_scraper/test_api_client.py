@@ -74,13 +74,13 @@ def _pbp_payload(game_id="0022500001"):
 
 # --- rowset_to_dicts ---
 
-def testrowset_to_dicts_basic():
+def test_rowset_to_dicts_basic():
     rs = {"headers": ["A", "B"], "rowSet": [[1, 2], [3, 4]]}
     result = rowset_to_dicts(rs)
     assert result == [{"A": 1, "B": 2}, {"A": 3, "B": 4}]
 
 
-def testrowset_to_dicts_empty():
+def test_rowset_to_dicts_empty():
     rs = {"headers": ["A", "B"], "rowSet": []}
     assert rowset_to_dicts(rs) == []
 
