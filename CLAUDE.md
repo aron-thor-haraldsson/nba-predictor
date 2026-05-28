@@ -24,15 +24,15 @@ pytest tests/test_models/test_game.py::test_game_defaults  # run one test
 ```
 src/
   constants.py        — BASE_DIR, DATA_DIR, GAMES_DIR, JSON_CACHE_DIR, LOG_DIR, BASE_TEAM,
-                        BASE_PLAYER, BASE_SEASON, BASE_GAME_ID, NBA_CDN_BASE, NBA_REQUEST_HEADERS
+                        BASE_PLAYER, BASE_SEASON, BASE_GAME_ID
   logging_config.py   — setup_logging(); call once from the entry point
   models/
     game.py           — PlayByPlayEvent, Game (dataclasses)
     player.py         — PlayerScore (attack/defence floats), Player
     team.py           — Team
   scraper/
-    cdn_scraper.py    — fetch_gamedetail(game_id), fetch_pbp(game_id, period) [data.nba.com CDN]
-    game_scraper.py   — scrape_game(game_id) -> Game  [parses CDN responses into Game objects]
+    stats_scraper.py  — fetch_stats_summary(game_id), fetch_stats_pbp(game_id) [stats.nba.com]
+    game_scraper.py   — scrape_game(game_id) -> Game
     season_scraper.py — scrape_season(year), scrape_all_seasons(start, end)
     storage.py        — save_game / load_game / game_exists  (pickle, keyed by game_id)
   scoring/
@@ -44,7 +44,7 @@ src/
 
 data/
   raw/games/     — one .pkl per game (gitignored)
-  raw/json/      — cached CDN JSON responses ({game_id}_gamedetail.json, {game_id}_{period}_pbp.json)
+  raw/json/      — cached stats.nba.com responses ({game_id}_stats_summary.json, {game_id}_stats_pbp.json)
   raw/seasons/   — season-level index files
   processed/     — scored player/team data
 
@@ -53,7 +53,7 @@ tests/           — mirrors src/ layout; test_scraper/, test_models/, test_scor
 
 ## Development phases
 
-1. **Scraping & storage** ✓ *complete*: `scrape_game()`, `scrape_season()`, `scrape_all_seasons()` implemented via the `data.nba.com` CDN using plain `requests`.
+1. **Scraping & storage** ✓ *complete*: `scrape_game()`, `scrape_season()`, `scrape_all_seasons()` implemented via `stats.nba.com` (playbyplayv3 + boxscoresummaryv2), covering 1996-97 onward.
 2. **Base player scoring** ← *current focus*: on/off court per-minute rates for James Johnson (Indiana Pacers) define the 1.0 attack/defence baseline. Score all Pacers players relative to him, across one game → full season → all history.
 3. **Expand to all teams**: repeat scoring for every team; use weighted averaging for cross-team ratios to limit error compounding.
 4. **Global relative scores**: unify all player scores across teams relative to the 1.0 baseline. Consider tracking score drift over time.
@@ -68,7 +68,7 @@ tests/           — mirrors src/ layout; test_scraper/, test_models/, test_scor
 
 **Player pairs**: represented as plain `tuple[str, str]`, not a custom class.
 
-**Data source**: `data.nba.com` CDN, accessed via plain `requests` with a browser User-Agent header. Lighter bot protection than `stats.nba.com`; no browser automation required. `storage.game_exists()` must always be checked before scraping to avoid redundant CDN calls.
+**Data source**: `stats.nba.com`, accessed via `requests` with a full Chrome browser header set. Covers 1996-97 onward. `storage.game_exists()` must always be checked before scraping to avoid redundant API calls.
 
 **Path management**: all paths derive from `BASE_DIR = project root` in `constants.py` using `os.path`. Storage functions accept an optional `games_dir` parameter so tests can redirect to `tmp_path` without mocking.
 

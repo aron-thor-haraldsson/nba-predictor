@@ -4,9 +4,9 @@ Scrapes and stores all games for one or more NBA seasons.
 Games already present on disk (checked via storage.game_exists) are skipped
 to avoid redundant API calls.
 
-Schedule JSON files are cached under SEASONS_DIR as {year}_schedule.json.
+Game ID lists are cached under SEASONS_DIR as {year}_game_ids.json.
 If one is already on disk it is used directly; otherwise it is fetched from
-the NBA schedule endpoint and saved for future runs.
+the stats.nba.com leaguegamefinder endpoint and saved for future runs.
 """
 import datetime
 import json
@@ -15,56 +15,79 @@ import os
 
 import requests
 
-from src.constants import NBA_CDN_BASE, NBA_REQUEST_HEADERS, SEASONS_DIR
+from src.constants import SEASONS_DIR
 from src.models.game import Game
 from src.scraper.game_scraper import GameNotPlayedError, scrape_game
+from src.scraper.stats_scraper import NBA_STATS_BASE, STATS_HEADERS
 from src.scraper.storage import game_exists, load_game, save_game
 
 logger = logging.getLogger(__name__)
 
-
-def _schedule_path(year: int) -> str:
-    return os.path.join(SEASONS_DIR, f"{year}_schedule.json")
-
-
-def _load_schedule(year: int, force_refresh: bool = False) -> dict:
-    path = _schedule_path(year)
-    if os.path.isfile(path) and not force_refresh:
-        logger.info("Loading %d schedule from %s", year, path)
-        with open(path) as f:
-            return json.load(f)
-    url = f"{NBA_CDN_BASE}/{year}/league/00_full_schedule.json"
-    logger.info("Fetching %d schedule from %s", year, url)
-    resp = requests.get(url, headers=NBA_REQUEST_HEADERS, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
-    os.makedirs(SEASONS_DIR, exist_ok=True)
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
-    logger.info("Saved %d schedule to %s", year, path)
-    return data
-
-
 _SCRAPEABLE_GAME_TYPES = frozenset("2456")  # regular, playoff, play-in, in-season tournament
 
 
-def _completed_game_ids(schedule: dict) -> list[str]:
+def _game_ids_path(year: int) -> str:
+    return os.path.join(SEASONS_DIR, f"{year}_game_ids.json")
+
+
+def _fetch_game_ids(year: int) -> list[str]:
+    """Fetch all completed game IDs for a season from stats.nba.com leaguegamefinder.
+
+    year is the season end year (e.g. 2025 for 2024-25).
+    Queries both Regular Season and Playoffs; deduplicates by game ID.
+    """
+    season_str = f"{year - 1}-{str(year)[-2:]}"
     today = datetime.date.today().isoformat()
-    ids = []
-    for month in schedule["lscd"]:
-        for game in month["mscd"]["g"]:
-            if game["gid"][2] not in _SCRAPEABLE_GAME_TYPES:
+    seen: set[str] = set()
+    ids: list[str] = []
+
+    for season_type in ("Regular Season", "Playoffs"):
+        resp = requests.get(
+            f"{NBA_STATS_BASE}/leaguegamefinder",
+            headers=STATS_HEADERS,
+            params={"Season": season_str, "SeasonType": season_type, "PlayerOrTeam": "T"},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        rs = next(
+            r for r in resp.json()["resultSets"]
+            if r["name"] == "LeagueGameFinderResults"
+        )
+        h = rs["headers"]
+        gid_idx = h.index("GAME_ID")
+        date_idx = h.index("GAME_DATE")
+        for row in rs["rowSet"]:
+            gid = row[gid_idx]
+            if gid[2] not in _SCRAPEABLE_GAME_TYPES:
                 continue
-            if game.get("st") == "3" or game.get("gdte", "") < today:
-                ids.append(game["gid"])
+            if gid in seen:
+                continue
+            if row[date_idx] > today:
+                continue
+            seen.add(gid)
+            ids.append(gid)
+
+    logger.info("Found %d completed games for %d season", len(ids), year)
+    return ids
+
+
+def _load_game_ids(year: int, force_refresh: bool = False) -> list[str]:
+    path = _game_ids_path(year)
+    if os.path.isfile(path) and not force_refresh:
+        logger.info("Loading %d game IDs from %s", year, path)
+        with open(path) as f:
+            return json.load(f)
+    ids = _fetch_game_ids(year)
+    os.makedirs(SEASONS_DIR, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(ids, f, indent=2)
+    logger.info("Saved %d game IDs to %s", year, path)
     return ids
 
 
 def scrape_season(year: int, force_refresh: bool = False) -> list[Game]:
     """Scrape all completed games for an NBA season identified by its end year (e.g. 2025)."""
-    schedule = _load_schedule(year, force_refresh=force_refresh)
-    game_ids = _completed_game_ids(schedule)
-    logger.info("Found %d completed games for %d season", len(game_ids), year)
+    game_ids = _load_game_ids(year, force_refresh=force_refresh)
     games = []
     for game_id in game_ids:
         if game_exists(game_id):

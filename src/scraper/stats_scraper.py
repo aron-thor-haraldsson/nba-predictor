@@ -1,12 +1,13 @@
 """
-NBA stats.nba.com scraper — fallback when data.nba.com CDN data is not yet archived.
+NBA stats.nba.com scraper, covering the 1996-97 season onward.
 
-stats.nba.com requires extra headers (Referer, Origin, NBA-specific) beyond the plain
-User-Agent the CDN accepts.
+stats.nba.com enforces stricter bot detection than most public APIs and requires
+a full set of modern browser headers (Chrome UA, Referer, Origin, Sec-* fields).
 
 Endpoints used:
   playbyplayv3       — all play-by-play actions for a game; returns {"game": {"actions": [...]}}
   boxscoresummaryv2  — game date, home/visitor team IDs and abbreviations; returns resultSets
+  leaguegamefinder   — list of game IDs for a given season (used by season_scraper)
 """
 import json
 import logging
@@ -19,10 +20,9 @@ from src.constants import JSON_CACHE_DIR
 logger = logging.getLogger(__name__)
 
 NBA_STATS_BASE = "https://stats.nba.com/stats"
-# stats.nba.com enforces stricter bot detection than data.nba.com.
-# A modern Chrome User-Agent plus the full set of expected CORS/Sec-* headers
-# is required; the old Firefox 72 UA used for the CDN causes a read timeout.
-_STATS_HEADERS = {
+# A modern Chrome User-Agent plus the full set of expected CORS/Sec-* headers is required;
+# a plain or outdated UA causes a read timeout.
+STATS_HEADERS = {
     "Host": "stats.nba.com",
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -73,7 +73,7 @@ def fetch_stats_summary(game_id: str) -> dict:
 
     url = f"{NBA_STATS_BASE}/boxscoresummaryv2"
     logger.debug("GET %s?GameID=%s", url, game_id)
-    resp = requests.get(url, headers=_STATS_HEADERS, params={"GameID": game_id}, timeout=60)
+    resp = requests.get(url, headers=STATS_HEADERS, params={"GameID": game_id}, timeout=60)
     resp.raise_for_status()
     result_sets = resp.json()["resultSets"]
 
@@ -119,7 +119,7 @@ def fetch_stats_pbp(game_id: str) -> list[dict]:
     url = f"{NBA_STATS_BASE}/playbyplayv3"
     params = {"GameID": game_id, "StartPeriod": 0, "EndPeriod": 0}
     logger.debug("GET %s?GameID=%s", url, game_id)
-    resp = requests.get(url, headers=_STATS_HEADERS, params=params, timeout=60)
+    resp = requests.get(url, headers=STATS_HEADERS, params=params, timeout=60)
     resp.raise_for_status()
     data = resp.json()
     if "game" not in data:
