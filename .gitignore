@@ -12,5 +12,7 @@ build/
 .idea/
 scrape.py
 data/raw/**
+!data/raw/*/
+!data/raw/*/.gitkeep
 logs/*.log
 logs/*.log.*
