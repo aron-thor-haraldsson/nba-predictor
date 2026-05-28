@@ -128,6 +128,7 @@ def test_scrape_season_scraped_prefix_when_no_cache(capsys):
         patch("src.scraper.season_scraper._json_cached", return_value=False),
         patch("src.scraper.season_scraper.scrape_game", return_value=game),
         patch("src.scraper.season_scraper.save_game"),
+        patch("src.scraper.season_scraper.time.sleep"),
     ):
         scrape_season(2025)
     assert "[scraped]" in capsys.readouterr().out
@@ -141,9 +142,26 @@ def test_scrape_season_saves_newly_scraped_game():
         patch("src.scraper.season_scraper._json_cached", return_value=False),
         patch("src.scraper.season_scraper.scrape_game", return_value=game),
         patch("src.scraper.season_scraper.save_game") as mock_save,
+        patch("src.scraper.season_scraper.time.sleep"),
     ):
         scrape_season(2025)
     mock_save.assert_called_once_with(game)
+
+
+def test_scrape_season_sleeps_after_live_scrape_only():
+    game = _make_game()
+    with (
+        patch("src.scraper.season_scraper._load_game_ids",
+              return_value=["0022500001", "0022500002"]),
+        patch("src.scraper.season_scraper.game_exists", return_value=False),
+        patch("src.scraper.season_scraper._json_cached",
+              side_effect=[False, True]),  # first live, second from JSON cache
+        patch("src.scraper.season_scraper.scrape_game", return_value=game),
+        patch("src.scraper.season_scraper.save_game"),
+        patch("src.scraper.season_scraper.time.sleep") as mock_sleep,
+    ):
+        scrape_season(2025)
+    mock_sleep.assert_called_once_with(0.6)
 
 
 def test_scrape_season_skips_game_not_played():
@@ -169,6 +187,7 @@ def test_scrape_season_returns_all_games():
         patch("src.scraper.season_scraper._json_cached", return_value=False),
         patch("src.scraper.season_scraper.scrape_game", side_effect=list(games)),
         patch("src.scraper.season_scraper.save_game"),
+        patch("src.scraper.season_scraper.time.sleep"),
     ):
         result = scrape_season(2025)
     assert result == games
