@@ -10,10 +10,12 @@ Game ID lists are cached under SEASONS_DIR as {year}_game_ids.json.
 If one is already on disk it is used directly; otherwise it is fetched from
 the stats.nba.com leaguegamefinder endpoint and saved for future runs.
 """
+import argparse
 import datetime
 import json
 import logging
 import os
+import time
 
 import requests
 
@@ -114,7 +116,8 @@ def scrape_season(year: int, force_refresh: bool = False) -> list[Game]:
             logger.debug("Loaded cached game %s", game_id)
             _print_game_line("[pkl cached]", game)
         else:
-            prefix = "[half-scrape]" if _json_cached(game_id) else "[scraped]"
+            live = not _json_cached(game_id)
+            prefix = "[scraped]" if live else "[half-scrape]"
             try:
                 game = scrape_game(game_id)
             except GameNotPlayedError as e:
@@ -122,6 +125,8 @@ def scrape_season(year: int, force_refresh: bool = False) -> list[Game]:
                 continue
             save_game(game)
             _print_game_line(prefix, game)
+            if live:
+                time.sleep(0.6)
         games.append(game)
     return games
 
@@ -132,3 +137,27 @@ def scrape_all_seasons(start_year: int, end_year: int, force_refresh: bool = Fal
     for year in range(start_year, end_year + 1):
         games.extend(scrape_season(year, force_refresh=force_refresh))
     return games
+
+
+if __name__ == "__main__":
+    from src.logging_config import setup_logging
+
+    setup_logging()
+
+    parser = argparse.ArgumentParser(description="Scrape NBA game data from stats.nba.com")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--year", type=int, metavar="YEAR",
+                       help="Season end year to scrape (e.g. 2025 for the 2024-25 season)")
+    group.add_argument("--all", action="store_true", dest="all_seasons",
+                       help="Scrape all seasons from 1997 to the current year")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-fetch the game ID list even if already cached")
+    args = parser.parse_args()
+
+    if args.all_seasons:
+        end_year = datetime.date.today().year
+        print(f"Scraping all seasons 1997–{end_year}...")
+        scrape_all_seasons(1997, end_year, force_refresh=args.force)
+    else:
+        print(f"Scraping {args.year} season...")
+        scrape_season(args.year, force_refresh=args.force)
