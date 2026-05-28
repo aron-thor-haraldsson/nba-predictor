@@ -10,7 +10,7 @@ from src.scoring.baseline_scorer import compute_on_off_rates, compute_baseline_r
 
 
 def test_compute_on_off_rates_not_implemented():
-    # Placeholder: replace with a real Game fixture once game_scraper is built.
+    # Placeholder: replace with a real Game fixture once the scorer is implemented.
     with pytest.raises(NotImplementedError):
         compute_on_off_rates(game=None, player_name="James Johnson", team="Indiana Pacers")
 
