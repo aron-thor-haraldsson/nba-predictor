@@ -154,7 +154,7 @@ if __name__ == "__main__":
     group.add_argument("--season", type=int, metavar="YEAR",
                        help="Season end year to scrape (e.g. 2025 for the 2024-25 season)")
     group.add_argument("--all", action="store_true", dest="all_seasons",
-                       help="Scrape all seasons from 1997 to the current year")
+                       help="Scrape all seasons from 1996-97 (end year 1997) to the current season")
     parser.add_argument("--force", action="store_true",
                         help="Re-fetch the game ID list even if already cached")
     args = parser.parse_args()
