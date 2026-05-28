@@ -5,10 +5,10 @@ Players: commonallplayers (all historical, ~5000+ entries)
 Teams:   franchisehistory + commonteamyears (30 active franchises)
 
 Usage (always force-refreshes from the API):
-  python -m src.scraper.lookup_scraper --fetch_players
-  python -m src.scraper.lookup_scraper --fetch_teams
-  python -m src.scraper.lookup_scraper --fetch_teams_history
-  python -m src.scraper.lookup_scraper --fetch_all_lookup
+  python -m src.scraper.lookup_scraper --fetch-players
+  python -m src.scraper.lookup_scraper --fetch-teams
+  python -m src.scraper.lookup_scraper --fetch-teams-history
+  python -m src.scraper.lookup_scraper --fetch-all-lookup
 """
 import argparse
 import csv
@@ -211,10 +211,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Refresh lookup tables from stats.nba.com.")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--fetch_players", action="store_true")
-    group.add_argument("--fetch_teams", action="store_true")
-    group.add_argument("--fetch_teams_history", action="store_true")
-    group.add_argument("--fetch_all_lookup", action="store_true")
+    group.add_argument("--fetch-players", action="store_true")
+    group.add_argument("--fetch-teams", action="store_true")
+    group.add_argument("--fetch-teams-history", action="store_true")
+    group.add_argument("--fetch-all-lookup", action="store_true")
     args = parser.parse_args()
 
     if args.fetch_players or args.fetch_all_lookup:
