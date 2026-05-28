@@ -8,11 +8,11 @@ Phases are a guide, not a rigid contract — order and scope can be adjusted.
 - [x] Architecture scaffolded: models, scraper, scoring, predictor packages
 - [x] `Game` and `PlayByPlayEvent` datatypes defined
 - [x] Pickle storage (`save_game` / `load_game` / `game_exists`) implemented and tested
-- [x] `scrape_game(game_id)` — fetches play-by-play from the `data.nba.com` CDN
+- [x] `scrape_game(game_id)` — fetches play-by-play from `stats.nba.com`
 - [x] `scrape_season(year)` — scrapes all completed games of one season
 - [x] `scrape_all_seasons(start, end)` — scrapes full historical record
 
-> CDN responses are expensive to re-fetch; always check `game_exists()` before scraping. Season schedules are cached as JSON under `data/raw/seasons/`.
+> `stats.nba.com` responses are expensive to re-fetch; always check `game_exists()` before scraping. Season schedules are cached as JSON under `data/raw/seasons/`.
 
 ---
 

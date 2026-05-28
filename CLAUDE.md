@@ -76,9 +76,13 @@ data/
   processed/          — scored player/team data
 
 tests/           — mirrors src/ layout; test_scraper/, test_models/, test_scoring/
+  conftest.py    — shared fixtures: minimal_game (no events), sample_game (2 periods, IND vs DET,
+                   scoring events + one substitution); use these for scoring and storage tests
 ```
 
 ## Key design decisions
+
+> See `DECISIONS.md` for the reasoning behind these choices.
 
 **Scoring model**: each player has `attack` and `defence` floats relative to the base player (James Johnson, Indiana Pacers = 1.0 / 1.0). Scores are derived from on-court vs off-court per-minute scoring rates across play-by-play data. `defence` is inverted: 0.5 means the opponent scores at half the rate, which is *better*.
 
