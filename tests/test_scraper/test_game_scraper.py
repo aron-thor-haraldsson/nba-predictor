@@ -10,10 +10,10 @@ import requests
 
 from src.scraper.game_scraper import (
     GameNotPlayedError,
-    _build_game_from_stats,
+    _build_game,
     _parse_iso_clock,
     _parse_sub_description,
-    _v3_event_type,
+    _map_action_type,
     scrape_game,
 )
 
@@ -30,28 +30,28 @@ def test_parse_iso_clock_seconds_only():
     assert _parse_iso_clock("PT00M45.00S") == "0:45.0"
 
 
-# --- _v3_event_type ---
+# --- _map_action_type ---
 
-def test_v3_event_type_field_goal():
-    assert _v3_event_type("Made Shot", "Jump Shot", "") == "field_goal"
+def test_map_action_type_field_goal():
+    assert _map_action_type("Made Shot", "Jump Shot", "") == "field_goal"
 
-def test_v3_event_type_missed_field_goal():
-    assert _v3_event_type("Missed Shot", "Pullup Jump shot", "") == "missed_field_goal"
+def test_map_action_type_missed_field_goal():
+    assert _map_action_type("Missed Shot", "Pullup Jump shot", "") == "missed_field_goal"
 
-def test_v3_event_type_free_throw():
-    assert _v3_event_type("Free Throw", "Free Throw 1 of 2", "") == "free_throw"
+def test_map_action_type_free_throw():
+    assert _map_action_type("Free Throw", "Free Throw 1 of 2", "") == "free_throw"
 
-def test_v3_event_type_period_end():
-    assert _v3_event_type("period", "end", "") == "end_period"
+def test_map_action_type_period_end():
+    assert _map_action_type("period", "end", "") == "end_period"
 
-def test_v3_event_type_period_start():
-    assert _v3_event_type("period", "start", "") == "start_period"
+def test_map_action_type_period_start():
+    assert _map_action_type("period", "start", "") == "start_period"
 
-def test_v3_event_type_substitution():
-    assert _v3_event_type("Substitution", "", "SUB: Rozier FOR Adebayo") == "substitution"
+def test_map_action_type_substitution():
+    assert _map_action_type("Substitution", "", "SUB: Rozier FOR Adebayo") == "substitution"
 
-def test_v3_event_type_unknown_passes_through():
-    assert _v3_event_type("Instant Replay", "Coach Challenge Overturn Ruling", "") == "instant_replay"
+def test_map_action_type_unknown_passes_through():
+    assert _map_action_type("Instant Replay", "Coach Challenge Overturn Ruling", "") == "instant_replay"
 
 
 # --- _parse_sub_description ---
@@ -73,7 +73,7 @@ def test_parse_sub_description_returns_none_for_malformed():
     assert result is None
 
 
-# --- _build_game_from_stats fixtures (playbyplayv3 action format) ---
+# --- _build_game fixtures (playbyplayv3 action format) ---
 #
 # Real v3 format notes:
 #   - actionType is Title Case: "Made Shot", "Substitution", "Rebound", etc.
@@ -178,61 +178,61 @@ def stats_actions_with_full_lineups(stats_actions):
     return home + away + stats_actions
 
 
-# --- _build_game_from_stats: metadata ---
+# --- _build_game: metadata ---
 
-def test_build_game_from_stats_game_id(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_game_id(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     assert game.game_id == "0022500001"
 
-def test_build_game_from_stats_date(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_date(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     assert game.date == datetime.date(2025, 10, 22)
 
-def test_build_game_from_stats_teams(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_teams(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     assert game.home_team_abbr == "HOM"
     assert game.away_team_abbr == "VIS"
     assert game.home_team_id == 1111
     assert game.away_team_id == 2222
 
 
-# --- _build_game_from_stats: scoring ---
+# --- _build_game: scoring ---
 
-def test_build_game_from_stats_score_tracking(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_score_tracking(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     final = game.events[-1]
     assert final.home_score == 2
     assert final.away_score == 2
 
-def test_build_game_from_stats_score_zero_before_first_basket(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_score_zero_before_first_basket(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     first_score_idx = next(i for i, e in enumerate(game.events) if e.home_score > 0 or e.away_score > 0)
     for e in game.events[:first_score_idx]:
         assert e.home_score == 0 and e.away_score == 0
 
-def test_build_game_from_stats_score_carries_forward(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_score_carries_forward(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     sub_event = next(e for e in game.events if e.event_type == "substitution")
     assert sub_event.home_score == 2
     assert sub_event.away_score == 2
 
-def test_build_game_from_stats_event_count(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_event_count(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     assert len(game.events) == len(stats_actions_with_full_lineups)
 
 
-# --- _build_game_from_stats: clock ---
+# --- _build_game: clock ---
 
-def test_build_game_from_stats_clock_gets_decimal(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_clock_gets_decimal(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     for event in game.events:
         assert "." in event.clock, f"Missing decimal in clock: {event.clock!r}"
 
 
-# --- _build_game_from_stats: substitutions ---
+# --- _build_game: substitutions ---
 
-def test_build_game_from_stats_sub_updates_lineup(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_sub_updates_lineup(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     sub_idx = next(i for i, e in enumerate(game.events) if e.event_type == "substitution")
     before = game.events[sub_idx - 1]
     after = game.events[sub_idx]
@@ -240,16 +240,16 @@ def test_build_game_from_stats_sub_updates_lineup(stats_summary, stats_actions_w
     assert "Eve E" not in after.home_players
     assert "Frank F" in after.home_players
 
-def test_build_game_from_stats_sub_does_not_change_away_lineup(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_sub_does_not_change_away_lineup(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     sub_idx = next(i for i, e in enumerate(game.events) if e.event_type == "substitution")
     before = game.events[sub_idx - 1]
     after = game.events[sub_idx]
     assert before.away_players == after.away_players
 
 
-def test_build_game_from_stats_sub_updates_lineup_ids(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_sub_updates_lineup_ids(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     sub_idx = next(i for i, e in enumerate(game.events) if e.event_type == "substitution")
     before = game.events[sub_idx - 1]
     after = game.events[sub_idx]
@@ -258,8 +258,8 @@ def test_build_game_from_stats_sub_updates_lineup_ids(stats_summary, stats_actio
     assert 6 in after.home_player_ids    # Frank F (pid 6) on court after sub
 
 
-def test_build_game_from_stats_player_ids_parallel_to_names(stats_summary, stats_actions_with_full_lineups):
-    game = _build_game_from_stats(stats_summary, stats_actions_with_full_lineups)
+def test_build_game_player_ids_parallel_to_names(stats_summary, stats_actions_with_full_lineups):
+    game = _build_game(stats_summary, stats_actions_with_full_lineups)
     for event in game.events:
         assert len(event.home_player_ids) == len(event.home_players)
         assert len(event.away_player_ids) == len(event.away_players)

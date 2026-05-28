@@ -24,7 +24,7 @@ def _parse_iso_clock(clock: str) -> str:
     return f"{minutes}:{int(sec_int):02d}.{tenths}"
 
 
-def _v3_event_type(action_type: str, sub_type: str, description: str) -> str:
+def _map_action_type(action_type: str, sub_type: str, description: str) -> str:
     """Map playbyplayv3 actionType → our event_type string."""
     match action_type:
         case "Made Shot":
@@ -76,7 +76,7 @@ def _parse_sub_description(
     return None
 
 
-def _infer_starters_stats(
+def _infer_starters(
     period1_actions: list[dict],
     pid_to_team: dict[int, str],
     pid_to_name: dict[int, str],
@@ -116,7 +116,7 @@ def _infer_starters_stats(
     return home_names, home_ids, away_names, away_ids
 
 
-def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
+def _build_game(summary: dict, actions: list[dict]) -> Game:
     """Build a Game from stats.nba.com playbyplayv3 actions + boxscoresummaryv2 summary."""
     home_abbr: str = summary["home_team_abbr"]
     away_abbr: str = summary["visitor_team_abbr"]
@@ -135,7 +135,7 @@ def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
             pid_to_team[pid] = team
 
     period1_actions = [a for a in actions if int(a.get("period") or 0) == 1]
-    home_lineup, home_lineup_ids, away_lineup, away_lineup_ids = _infer_starters_stats(
+    home_lineup, home_lineup_ids, away_lineup, away_lineup_ids = _infer_starters(
         period1_actions, pid_to_team, pid_to_name, home_abbr, away_abbr
     )
 
@@ -178,7 +178,7 @@ def _build_game_from_stats(summary: dict, actions: list[dict]) -> Game:
         events.append(PlayByPlayEvent(
             period=int(action["period"]),
             clock=clock,
-            event_type=_v3_event_type(action_type, sub_type, desc),
+            event_type=_map_action_type(action_type, sub_type, desc),
             description=desc,
             home_score=home_score_running,
             away_score=away_score_running,
@@ -225,4 +225,4 @@ def scrape_game(game_id: str) -> Game:
         raise GameNotPlayedError(f"Game {game_id} not available on stats.nba.com") from e
     if not actions:
         raise GameNotPlayedError(f"Game {game_id} has no play-by-play data")
-    return _build_game_from_stats(summary, actions)
+    return _build_game(summary, actions)
