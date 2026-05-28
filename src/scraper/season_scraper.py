@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Scrape NBA game data from stats.nba.com")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--year", type=int, metavar="YEAR",
+    group.add_argument("--season", type=int, metavar="YEAR",
                        help="Season end year to scrape (e.g. 2025 for the 2024-25 season)")
     group.add_argument("--all", action="store_true", dest="all_seasons",
                        help="Scrape all seasons from 1997 to the current year")
@@ -159,5 +159,5 @@ if __name__ == "__main__":
         print(f"Scraping all seasons 1997–{end_year}...")
         scrape_all_seasons(1997, end_year, force_refresh=args.force)
     else:
-        print(f"Scraping {args.year} season...")
-        scrape_season(args.year, force_refresh=args.force)
+        print(f"Scraping {args.season} season...")
+        scrape_season(args.season, force_refresh=args.force)
