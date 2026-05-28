@@ -9,6 +9,11 @@ For each game in a season, exactly one terminal line is printed:
 Game ID lists are cached under SEASONS_DIR as {year}_game_ids.json.
 If one is already on disk it is used directly; otherwise it is fetched from
 the stats.nba.com leaguegamefinder endpoint and saved for future runs.
+
+Usage:
+    python -m src.scraper.season_scraper --season 2025
+    python -m src.scraper.season_scraper --season 2025 --force
+    python -m src.scraper.season_scraper --all
 """
 import argparse
 import datetime
