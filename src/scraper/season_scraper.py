@@ -1,8 +1,10 @@
 """
 Scrapes and stores all games for one or more NBA seasons.
 
-Games already present on disk (checked via storage.game_exists) are skipped
-to avoid redundant API calls.
+For each game in a season, exactly one terminal line is printed:
+  [pkl cached]  — game was already stored as a .pkl file
+  [half-scrape] — both JSON caches were present; no network call made
+  [scraped]     — game was fetched live from stats.nba.com
 
 Game ID lists are cached under SEASONS_DIR as {year}_game_ids.json.
 If one is already on disk it is used directly; otherwise it is fetched from
