@@ -1,18 +1,34 @@
+# Python tooling
 .venv/
 __pycache__/
 *.pyc
-*.pyo
 .pytest_cache/
-.env
 .coverage
+
+# Package / build
 *.egg-info/
 dist/
 build/
+
+# IDE
 .vscode/
 .idea/
+
+# Secrets / environment
+.env
+
+# Project: scratch files
 scrape.py
+
+# Project: raw API responses and game pickles
 data/raw/**
 !data/raw/*/
 !data/raw/*/.gitkeep
+
+# Project: processed scoring output
+data/processed/**
+!data/processed/.gitkeep
+
+# Project: logs
 logs/*.log
 logs/*.log.*
