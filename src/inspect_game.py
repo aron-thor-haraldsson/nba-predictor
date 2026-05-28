@@ -11,7 +11,7 @@ import argparse
 import sys
 
 from src.models.game import PlayByPlayEvent
-from src.scraper.storage import game_exists, load_game
+from src.storage import game_exists, load_game
 
 
 def _lineup_diff(team: str, before: tuple, after: tuple) -> str:

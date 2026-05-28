@@ -19,7 +19,7 @@ from collections import defaultdict
 import requests
 
 from src.constants import PLAYERS_CSV, TEAMS_HISTORY_CSV, TEAMS_CSV
-from src.scraper.stats_scraper import NBA_STATS_BASE, STATS_HEADERS
+from src.scraper.api_client import NBA_STATS_BASE, STATS_HEADERS
 
 logger = logging.getLogger(__name__)
 

@@ -30,14 +30,14 @@ src/
     game.py           — PlayByPlayEvent, Game (dataclasses)
     player.py         — PlayerScore (attack/defence floats), Player
     team.py           — Team
+  storage.py          — save_game / load_game / game_exists  (pickle, keyed by game_id)
   scraper/
-    stats_scraper.py  — fetch_stats_summary(game_id), fetch_stats_pbp(game_id) [stats.nba.com]
+    api_client.py     — fetch_stats_summary(game_id), fetch_stats_pbp(game_id) [stats.nba.com HTTP]
     game_scraper.py   — scrape_game(game_id) -> Game
     season_scraper.py — scrape_season(year), scrape_all_seasons(start, end)
-    storage.py        — save_game / load_game / game_exists  (pickle, keyed by game_id)
     lookup_scraper.py — fetch_players(), fetch_teams(), fetch_teams_history() → CSV lookup tables
   scoring/
-    base_scorer.py    — compute_on_off_rates(), compute_baseline_rates()
+    baseline_scorer.py — compute_on_off_rates(), compute_baseline_rates()
     player_scorer.py  — score_player(), score_all_players()
     team_scorer.py    — aggregate_team_score()
   predictor/
@@ -74,7 +74,7 @@ tests/           — mirrors src/ layout; test_scraper/, test_models/, test_scor
 
 **Player pairs**: represented as plain `tuple[str, str]`, not a custom class.
 
-**Data source**: `stats.nba.com`, accessed via `requests` with a full Chrome browser header set. Covers 1996-97 onward. `storage.game_exists()` must always be checked before scraping to avoid redundant API calls.
+**Data source**: `stats.nba.com`, accessed via `requests` with a full Chrome browser header set. Covers 1996-97 onward. `storage.game_exists()` must always be checked before scraping to avoid redundant API calls. The raw HTTP layer lives in `scraper/api_client.py`; scrapers call into it.
 
 **Path management**: all paths derive from `BASE_DIR = project root` in `constants.py` using `os.path`. Storage functions accept an optional `games_dir` parameter so tests can redirect to `tmp_path` without mocking.
 

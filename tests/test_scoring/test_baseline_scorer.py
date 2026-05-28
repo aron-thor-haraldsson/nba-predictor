@@ -1,12 +1,12 @@
 """
-Tests for base_scorer.compute_on_off_rates.
+Tests for baseline_scorer.compute_on_off_rates.
 
 These will be filled in once the scorer is implemented, but the structure
 and expected contract is defined here to guide development.
 """
 import pytest
 
-from src.scoring.base_scorer import compute_on_off_rates, compute_baseline_rates
+from src.scoring.baseline_scorer import compute_on_off_rates, compute_baseline_rates
 
 
 def test_compute_on_off_rates_not_implemented():

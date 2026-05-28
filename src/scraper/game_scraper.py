@@ -9,7 +9,7 @@ import logging
 import requests
 
 from src.models.game import Game, PlayByPlayEvent
-from src.scraper.stats_scraper import fetch_stats_pbp, fetch_stats_summary
+from src.scraper.api_client import fetch_stats_pbp, fetch_stats_summary
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 """
-NBA stats.nba.com scraper, covering the 1996-97 season onward.
+HTTP client for stats.nba.com, covering the 1996-97 season onward.
 
 stats.nba.com enforces stricter bot detection than most public APIs and requires
 a full set of modern browser headers (Chrome UA, Referer, Origin, Sec-* fields).

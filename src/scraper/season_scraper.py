@@ -22,8 +22,8 @@ import requests
 from src.constants import JSON_CACHE_DIR, SEASONS_DIR
 from src.models.game import Game
 from src.scraper.game_scraper import GameNotPlayedError, scrape_game
-from src.scraper.stats_scraper import NBA_STATS_BASE, STATS_HEADERS
-from src.scraper.storage import game_exists, load_game, save_game
+from src.scraper.api_client import NBA_STATS_BASE, STATS_HEADERS
+from src.storage import game_exists, load_game, save_game
 
 logger = logging.getLogger(__name__)
 

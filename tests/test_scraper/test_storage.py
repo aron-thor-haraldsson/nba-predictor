@@ -1,7 +1,7 @@
 import datetime
 
 from src.models.game import Game
-from src.scraper.storage import save_game, load_game, game_exists, game_path
+from src.storage import save_game, load_game, game_exists, game_path
 
 
 def _sample_game() -> Game:

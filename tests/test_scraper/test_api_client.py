@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.scraper.stats_scraper import (
+from src.scraper.api_client import (
     NBA_STATS_BASE,
     _find_result_set,
     _rowset_to_dicts,
@@ -100,8 +100,8 @@ def test_find_result_set_not_found():
 # --- fetch_stats_summary ---
 
 def test_fetch_stats_summary_constructs_url(tmp_path):
-    with patch("src.scraper.stats_scraper.JSON_CACHE_DIR", str(tmp_path)), \
-         patch("src.scraper.stats_scraper.requests.get",
+    with patch("src.scraper.api_client.JSON_CACHE_DIR", str(tmp_path)), \
+         patch("src.scraper.api_client.requests.get",
                return_value=_make_response(_summary_payload())) as mock_get:
         fetch_stats_summary("0022500001")
         url = mock_get.call_args[0][0]
@@ -110,8 +110,8 @@ def test_fetch_stats_summary_constructs_url(tmp_path):
 
 
 def test_fetch_stats_summary_sends_nba_headers(tmp_path):
-    with patch("src.scraper.stats_scraper.JSON_CACHE_DIR", str(tmp_path)), \
-         patch("src.scraper.stats_scraper.requests.get",
+    with patch("src.scraper.api_client.JSON_CACHE_DIR", str(tmp_path)), \
+         patch("src.scraper.api_client.requests.get",
                return_value=_make_response(_summary_payload())) as mock_get:
         fetch_stats_summary("0022500001")
         headers = mock_get.call_args[1]["headers"]
@@ -120,8 +120,8 @@ def test_fetch_stats_summary_sends_nba_headers(tmp_path):
 
 
 def test_fetch_stats_summary_parses_metadata(tmp_path):
-    with patch("src.scraper.stats_scraper.JSON_CACHE_DIR", str(tmp_path)), \
-         patch("src.scraper.stats_scraper.requests.get",
+    with patch("src.scraper.api_client.JSON_CACHE_DIR", str(tmp_path)), \
+         patch("src.scraper.api_client.requests.get",
                return_value=_make_response(_summary_payload())):
         result = fetch_stats_summary("0022500001")
     assert result["game_date_est"] == "2025-10-22"
@@ -133,8 +133,8 @@ def test_fetch_stats_summary_parses_metadata(tmp_path):
 
 def test_fetch_stats_summary_strips_time_from_date(tmp_path):
     """GAME_DATE_EST sometimes includes a time component."""
-    with patch("src.scraper.stats_scraper.JSON_CACHE_DIR", str(tmp_path)), \
-         patch("src.scraper.stats_scraper.requests.get",
+    with patch("src.scraper.api_client.JSON_CACHE_DIR", str(tmp_path)), \
+         patch("src.scraper.api_client.requests.get",
                return_value=_make_response(_summary_payload())):
         result = fetch_stats_summary("0022500001")
     assert result["game_date_est"] == "2025-10-22"
@@ -148,8 +148,8 @@ def test_fetch_stats_summary_uses_cache(tmp_path):
     cache_file = tmp_path / "0022500001_stats_summary.json"
     cache_file.write_text(json.dumps(cached))
 
-    with patch("src.scraper.stats_scraper.JSON_CACHE_DIR", str(tmp_path)), \
-         patch("src.scraper.stats_scraper.requests.get") as mock_get:
+    with patch("src.scraper.api_client.JSON_CACHE_DIR", str(tmp_path)), \
+         patch("src.scraper.api_client.requests.get") as mock_get:
         result = fetch_stats_summary("0022500001")
         mock_get.assert_not_called()
     assert result == cached
@@ -158,8 +158,8 @@ def test_fetch_stats_summary_uses_cache(tmp_path):
 # --- fetch_stats_pbp ---
 
 def test_fetch_stats_pbp_constructs_url(tmp_path):
-    with patch("src.scraper.stats_scraper.JSON_CACHE_DIR", str(tmp_path)), \
-         patch("src.scraper.stats_scraper.requests.get",
+    with patch("src.scraper.api_client.JSON_CACHE_DIR", str(tmp_path)), \
+         patch("src.scraper.api_client.requests.get",
                return_value=_make_response(_pbp_payload())) as mock_get:
         fetch_stats_pbp("0022500001")
         url = mock_get.call_args[0][0]
@@ -168,8 +168,8 @@ def test_fetch_stats_pbp_constructs_url(tmp_path):
 
 
 def test_fetch_stats_pbp_returns_list_of_dicts(tmp_path):
-    with patch("src.scraper.stats_scraper.JSON_CACHE_DIR", str(tmp_path)), \
-         patch("src.scraper.stats_scraper.requests.get",
+    with patch("src.scraper.api_client.JSON_CACHE_DIR", str(tmp_path)), \
+         patch("src.scraper.api_client.requests.get",
                return_value=_make_response(_pbp_payload())):
         actions = fetch_stats_pbp("0022500001")
     assert isinstance(actions, list)
@@ -181,8 +181,8 @@ def test_fetch_stats_pbp_returns_list_of_dicts(tmp_path):
 
 def test_fetch_stats_pbp_does_not_cache_empty_response(tmp_path):
     empty_payload = {"game": {"gameId": "0022500001", "actions": []}}
-    with patch("src.scraper.stats_scraper.JSON_CACHE_DIR", str(tmp_path)), \
-         patch("src.scraper.stats_scraper.requests.get",
+    with patch("src.scraper.api_client.JSON_CACHE_DIR", str(tmp_path)), \
+         patch("src.scraper.api_client.requests.get",
                return_value=_make_response(empty_payload)):
         fetch_stats_pbp("0022500001")
     assert not (tmp_path / "0022500001_stats_pbp.json").exists()
