@@ -34,8 +34,16 @@ No custom class. A named pair added no behaviour beyond what a two-element tuple
 
 ---
 
-## Cross-team comparison: ratio chains
+## Cross-team comparison: global regression (RAPM)
 
-*(Placeholder — reasoning to be documented.)*
+Players on different teams may never share court time, making direct on/off comparison impossible. The chosen method is Regularized Adjusted Plus/Minus (RAPM): a ridge-regularized linear regression where each row is one lineup stint, the response is net score differential per 100 possessions, and each column is a player indicator (+1 on court for the team, -1 for the opponent, 0 absent). All player coefficients are estimated simultaneously across the full dataset.
 
-Players on different teams may never share court time, making direct on/off comparison impossible. The current approach links them via weighted chains of ratio comparisons through shared intermediaries. **Why this method was chosen over alternatives (e.g. a global regression, a graph-based PageRank-style score, or simply accepting team-relative scores without unification) has not yet been documented.** Revisit and fill in before Phase 3 begins.
+**Why not ratio chains**: sequential estimation compounds error multiplicatively at every hop with no feedback mechanism to correct earlier links. Error bounds explode with chain length and there is no principled way to weight chains of different lengths against each other.
+
+**Why not graph propagation**: the PageRank analogy breaks down because co-presence is a noisy local measurement, not a directed authority signal. Nodes must be seeded with team-relative scores before propagation, so convergence averages over priors rather than discovering a global truth. Bias introduced at any cluster of nodes spreads silently with no audit trail.
+
+**Why not team-relative only**: cross-team player comparison is required for game outcome prediction. Keeping scores within each team's frame of reference makes unified prediction impossible.
+
+**Why RAPM**: cross-team comparability falls out of the linear algebra for free — players who never shared court time are still jointly constrained by the same global loss function (score differential). Ridge regularization shrinks low-minute players toward the league mean rather than producing erratic estimates from small samples, and regularization strength is tunable and cross-validatable against held-out game outcomes. The full dataset (1996–97 onward) provides sufficient density to stabilise coefficients.
+
+**Semantic note**: RAPM coefficients are additive marginal effects, not the on/off rate ratios used elsewhere in the model. The scoring layer must convert them to the `attack`/`defence` ratio space before populating `PlayerScore`.
